@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>pH Mix Master</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Fuente académica/limpia (Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -63,20 +62,30 @@
                         <input type="number" id="volume2" step="any" min="0" placeholder="Ej: 0">
                     </div>
                 </div>
-            </div>
 
-            <div class="actions">
-                <button type="button" id="calculate-btn">Calcular pH</button>
+                <!-- Panel de Control y Resultados (3ª Columna) -->
+                <div class="card result-card-container">
+                    <h2>Resultado</h2>
+                    
+                    <div class="actions">
+                        <button type="button" id="calculate-btn">Calcular pH</button>
+                    </div>
+
+                    <!-- Espacio reservado para error (siempre ocupa sitio) -->
+                    <div id="error-container">
+                        <p id="error-message" class="error invisible"></p>
+                    </div>
+
+                    <div id="result-section">
+                        <div id="result-box">
+                            <span class="label">pH resultante</span>
+                            <span id="ph-value">--</span>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </form>
-
-        <div id="result-section" class="hidden">
-            <p id="error-message" class="error hidden"></p>
-            <div id="result-box">
-                <span class="label">pH resultante</span>
-                <span id="ph-value">--</span>
-            </div>
-        </div>
     </main>
 
     <script src="script.js"></script>

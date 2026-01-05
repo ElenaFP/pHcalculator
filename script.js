@@ -1,12 +1,9 @@
-// Constantes de sustancias (Copiadas del código Python original)
-// acids
+// Constantes de sustancias
 const ACIDS = ["HCl", "HBr", "HI", "HNO3", "HClO3", "HClO4"];
-// bases
 const BASES = ["LiOH", "NaOH", "KOH", "RbOH", "CsOH"];
-// neutrals
 const NEUTRALS = ["H2O (no molarity)", "NaCl", "KCl", "No substance"];
 
-// Clase Substance portada de Python a JS
+// Clase Substance
 class Substance {
     constructor(formula, molarity, volume) {
         if (molarity < 0 || volume < 0) {
@@ -43,14 +40,12 @@ class Substance {
 }
 
 // Lógica de cálculo (Funciones puras)
-
 function getTotalVolume(substance1, substance2) {
     return substance1.get_volume() + substance2.get_volume();
 }
 
 function getProtonsConcentration(substance1, substance2, totalVolume) {
-    let protons = 1e-7; // 0.0000001 (Aporte del agua)
-
+    let protons = 1e-7;
     if (totalVolume === 0) return protons;
 
     if (substance1.is_acid()) {
@@ -63,8 +58,7 @@ function getProtonsConcentration(substance1, substance2, totalVolume) {
 }
 
 function getHydroxilsConcentration(substance1, substance2, totalVolume) {
-    let hydroxils = 1e-7; // 0.0000001 (Aporte del agua)
-
+    let hydroxils = 1e-7;
     if (totalVolume === 0) return hydroxils;
 
     if (substance1.is_base()) {
@@ -78,21 +72,13 @@ function getHydroxilsConcentration(substance1, substance2, totalVolume) {
 
 function getPH(protons, hydroxils) {
     const totalProtons = protons - hydroxils;
-
     let pH;
-    // Usamos un epsilon pequeño para comparaciones flotantes si fuera necesario,
-    // pero la lógica original de Python era directa > 0 o < 0.
-    
     if (totalProtons > 0) {
-        // Ácido dominante
         pH = -Math.log10(totalProtons);
     } else if (totalProtons < 0) {
-        // Base dominante (totalProtons es negativo, así que hydroxils > protons)
-        // La lógica original Python: total_hydroxils = -total_protons
         const totalHydroxils = -totalProtons;
         pH = 14 + Math.log10(totalHydroxils);
     } else {
-        // Neutro exacto
         pH = 7;
     }
     return pH;
@@ -108,7 +94,6 @@ function validatePH(pH) {
 }
 
 function getColorClass(pH) {
-    // Redondeamos a 2 decimales para la lógica de color visual para evitar parpadeos en bordes
     const phVal = parseFloat(pH.toFixed(2));
     if (phVal < 7.00) return "result-acid";
     if (phVal > 7.00) return "result-base";
@@ -149,23 +134,20 @@ document.addEventListener('DOMContentLoaded', () => {
     populateSelect(select1);
     populateSelect(select2);
 
-    // Selección por defecto (igual que en tu Python original, la segunda era la opción 12 aprox)
-    // Pondremos valores por defecto razonables
     select1.value = ACIDS[0]; // HCl
     select2.value = NEUTRALS[3]; // No substance
 
     // 2. Manejar el click del botón
     const btn = document.getElementById('calculate-btn');
-    const resultSection = document.getElementById('result-section');
     const resultBox = document.getElementById('result-box');
     const phValueSpan = document.getElementById('ph-value');
     const errorMsg = document.getElementById('error-message');
 
     btn.addEventListener('click', () => {
-        // Limpiar estados previos
-        errorMsg.classList.add('hidden');
+        // Reset visual
+        errorMsg.classList.add('invisible'); // Usamos invisible, no hidden
         errorMsg.textContent = "";
-        resultBox.className = ""; // Quitar clases de color
+        resultBox.className = ""; // Quitar colores
 
         // Obtener valores
         const f1 = select1.value;
@@ -173,11 +155,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const v1 = parseFloat(document.getElementById('volume1').value);
 
         const f2 = select2.value;
-        // Si están vacíos, asumimos 0 (como en tu python original con los chequeos)
         const m2 = document.getElementById('molarity2').value ? parseFloat(document.getElementById('molarity2').value) : 0;
         const v2 = document.getElementById('volume2').value ? parseFloat(document.getElementById('volume2').value) : 0;
 
-        // Validación básica de entrada sustancia 1
+        // Validación básica
         if (isNaN(m1) || isNaN(v1)) {
             alert("Por favor, introduce valores numéricos válidos para la Sustancia 1.");
             return;
@@ -188,8 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const s2 = new Substance(f2, m2, v2);
 
             const totalVol = getTotalVolume(s1, s2);
-            
-            // Cálculos
             const protons = getProtonsConcentration(s1, s2, totalVol);
             const hydroxils = getHydroxilsConcentration(s1, s2, totalVol);
             const pH = getPH(protons, hydroxils);
@@ -198,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const rangeWarning = validatePH(pH);
             if (rangeWarning) {
                 errorMsg.textContent = rangeWarning;
-                errorMsg.classList.remove('hidden');
+                errorMsg.classList.remove('invisible'); // Mostrar mensaje
             }
 
             // Mostrar resultado
@@ -208,8 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const colorClass = getColorClass(pH);
             resultBox.classList.add(colorClass);
 
-            // Hacer visible la sección
-            resultSection.classList.remove('hidden');
+            // Ya no hace falta mostrar result-section porque siempre es visible
 
         } catch (e) {
             alert("Error: " + e.message);
