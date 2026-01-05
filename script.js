@@ -103,6 +103,68 @@ function getColorClass(pH) {
 
 // --- Lógica de UI ---
 
+// Mapeo de iones para formular sales
+// Clave: Fórmula completa (con unicode), Valor: Parte iónica (string simple para formatear después)
+const ANIONS = {
+    "HCl": "Cl",
+    "HBr": "Br",
+    "HI": "I",
+    "HNO\u2083": "NO3",
+    "HClO\u2083": "ClO3",
+    "HClO\u2084": "ClO4"
+};
+
+const CATIONS = {
+    "LiOH": "Li",
+    "NaOH": "Na",
+    "KOH": "K",
+    "RbOH": "Rb",
+    "CsOH": "Cs"
+};
+
+function formatFormulaHTML(formula) {
+    // Convierte números en la fórmula a etiquetas <sub>
+    // También maneja los unicodes si vienen
+    return formula.replace(/(\d+)/g, "<sub>$1</sub>")
+                  .replace(/\u2082/g, "<sub>2</sub>")
+                  .replace(/\u2083/g, "<sub>3</sub>")
+                  .replace(/\u2084/g, "<sub>4</sub>");
+}
+
+function getReactionHTML(substance1, substance2) {
+    let acid = null;
+    let base = null;
+
+    if (substance1.is_acid()) acid = substance1;
+    if (substance2.is_acid()) acid = substance2;
+    
+    if (substance1.is_base()) base = substance1;
+    if (substance2.is_base()) base = substance2;
+
+    // Caso 1: Neutralización (Ácido + Base)
+    if (acid && base) {
+        const anion = ANIONS[acid._formula];
+        const cation = CATIONS[base._formula];
+        
+        if (anion && cation) {
+            const salt = cation + anion;
+            return `${formatFormulaHTML(acid._formula)} + ${formatFormulaHTML(base._formula)} 
+                    <span class="arrow">&rarr;</span> 
+                    ${formatFormulaHTML(salt)} + H<sub>2</sub>O`;
+        }
+    }
+
+    // Caso 2: Determinar si es una mezcla o sustancia única
+    const s1Present = substance1._formula !== "No substance" && substance1.get_volume() > 0;
+    const s2Present = substance2._formula !== "No substance" && substance2.get_volume() > 0;
+
+    if (s1Present && s2Present) {
+        return `<span class="no-reaction">Mezcla sin reacción química</span>`;
+    } else {
+        return `<span class="no-reaction">Sin reacción química</span>`;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Rellenar los dropdowns
     const allOptions = [
@@ -165,12 +227,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultBox = document.getElementById('result-box');
     const phValueSpan = document.getElementById('ph-value');
     const errorMsg = document.getElementById('error-message');
+    const reactionContainer = document.getElementById('reaction-container');
+    const reactionEquation = document.getElementById('reaction-equation');
 
     btn.addEventListener('click', () => {
         // Reset visual
         errorMsg.classList.add('invisible'); 
         errorMsg.textContent = "";
         resultBox.className = ""; 
+        reactionContainer.classList.add('hidden'); // Ocultar reacción previa
 
         // Obtener valores
         const f1 = select1.value;
@@ -203,8 +268,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const rangeWarning = validatePH(pH);
             if (rangeWarning) {
                 errorMsg.textContent = rangeWarning;
-                errorMsg.classList.remove('invisible'); // Mostrar mensaje
+                errorMsg.classList.remove('invisible'); 
             }
+
+            // Mostrar Ecuación Química
+            reactionEquation.innerHTML = getReactionHTML(s1, s2);
+            reactionContainer.classList.remove('hidden');
 
             // Mostrar resultado
             phValueSpan.textContent = pH.toFixed(2);

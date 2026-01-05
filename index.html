@@ -21,7 +21,7 @@
             <div class="substances-grid">
                 <!-- Sustancia 1 -->
                 <div class="card">
-                    <h2>Sustancia 1</h2>
+                    <h2>Disolución 1</h2>
                     
                     <div class="form-group">
                         <label for="formula1">Fórmula</label>
@@ -43,7 +43,7 @@
 
                 <!-- Sustancia 2 -->
                 <div class="card">
-                    <h2>Sustancia 2</h2>
+                    <h2>Disolución 2</h2>
                     
                     <div class="form-group">
                         <label for="formula2">Fórmula</label>
@@ -65,10 +65,14 @@
 
                 <!-- Panel de Control y Resultados (3ª Columna) -->
                 <div class="card result-card-container">
-                    <h2>Resultado</h2>
-                    
                     <div class="actions">
                         <button type="button" id="calculate-btn">Calcular pH</button>
+                    </div>
+
+                    <!-- Ecuación Química -->
+                    <div id="reaction-container" class="hidden">
+                        <span class="reaction-label">Reacción:</span>
+                        <div id="reaction-equation"></div>
                     </div>
 
                     <!-- Espacio reservado para error (siempre ocupa sitio) -->

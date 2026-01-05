@@ -78,7 +78,7 @@ header p {
     grid-template-columns: 1fr;
     gap: 1rem;
     margin-bottom: 1rem;
-    align-items: stretch; /* Todas las columnas misma altura */
+    align-items: stretch;
 }
 
 @media (min-width: 768px) {
@@ -89,7 +89,6 @@ header p {
     
     .result-card-container {
         grid-column: span 2; 
-        /* En tablet, usamos layout horizontal interno */
         flex-direction: row !important; 
         align-items: center;
         justify-content: space-around;
@@ -98,6 +97,11 @@ header p {
     .result-card-container .actions {
         width: auto;
         margin: 0;
+    }
+    
+    /* Ajuste para que la reacción no rompa el layout horizontal en tablet */
+    #reaction-container {
+        margin: 0 1rem;
     }
 }
 
@@ -108,13 +112,17 @@ header p {
 
     .result-card-container {
         grid-column: span 1;
-        flex-direction: column !important; /* Volver a columna en desktop */
+        flex-direction: column !important;
         justify-content: flex-start;
     }
     
     .result-card-container .actions {
         width: 100%;
         margin-top: 0;
+    }
+
+    #reaction-container {
+        margin: 0.5rem 0;
     }
 }
 
@@ -155,8 +163,8 @@ header p {
     padding: 0.6rem;
     border: 1px solid var(--border);
     border-radius: 8px;
-    font-size: 1.05rem; /* Aumentado ligeramente */
-    font-weight: 500;    /* Un poco más de peso para que los subíndices se vean mejor */
+    font-size: 1.05rem; 
+    font-weight: 500;
     background-color: #fff;
     transition: border-color 0.2s;
 }
@@ -171,11 +179,12 @@ header p {
 /* --- RESULT CARD SPECIFICS --- */
 .result-card-container {
     padding-bottom: 1.5rem;
+    padding-top: 1.25rem; /* Ajuste para compensar la falta de título */
 }
 
 .actions {
     width: 100%;
-    margin-bottom: 0;
+    margin-bottom: 0.5rem; /* Separar del siguiente elemento */
 }
 
 button {
@@ -200,35 +209,74 @@ button:active {
     transform: translateY(1px);
 }
 
+/* --- REACTION DISPLAY --- */
+#reaction-container {
+    width: 100%;
+    text-align: center;
+    margin-top: 0.5rem; /* Reducido */
+    padding: 0.4rem;    /* Reducido */
+    background-color: #f1f5f9;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.85rem; /* Ligeramente más pequeño */
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.reaction-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.1rem;
+}
+
+#reaction-equation {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.arrow {
+    margin: 0 0.25rem;
+    color: var(--primary);
+}
+
+.no-reaction {
+    color: var(--text-muted);
+    font-style: italic;
+    font-weight: normal;
+}
+
+
 /* --- ZONA DE ERROR ESTABLE --- */
 #error-container {
     width: 100%;
-    height: 60px; /* Altura fija reservada */
+    height: 45px; /* Reducido de 60px */
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0.5rem 0; /* Espacio arriba y abajo */
+    margin: 0.25rem 0; /* Reducido */
+    position: relative;
 }
 
 .error {
     color: #ef4444;
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.75rem; /* Más compacto */
     text-align: center;
     background: #fef2f2;
-    padding: 0.5rem;
+    padding: 0.4rem;
     border-radius: 8px;
     border: 1px solid #fecaca;
     width: 100%;
-    
-    /* Animación de entrada */
     animation: fadeIn 0.3s ease-in-out;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 20;
 }
 
-/* Clase para ocultar visualmente pero mantener espacio? 
-   No, aquí usamos visibility:hidden para que NO se vea el borde rojo
-   cuando está vacío, pero el contenedor padre (#error-container) mantiene el sitio.
-*/
 .invisible {
     visibility: hidden; 
 }
@@ -245,7 +293,7 @@ button:active {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex-grow: 1; /* Ocupa el resto del espacio */
+    flex-grow: 1;
 }
 
 #result-box {
@@ -253,8 +301,8 @@ button:active {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 160px;
-    height: 160px;
+    width: 130px; /* Reducido de 160px */
+    height: 130px;
     border-radius: 50%;
     background: white;
     box-shadow: var(--shadow);
@@ -264,20 +312,20 @@ button:active {
 
 @media (min-width: 1100px) {
     #result-box {
-        width: 180px;
-        height: 180px;
+        width: 150px; /* Reducido de 180px */
+        height: 150px;
     }
 }
 
 #result-box .label {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     letter-spacing: 0.5px;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.1rem;
     color: var(--text-muted);
 }
 
 #result-box #ph-value {
-    font-size: 2.5rem;
+    font-size: 2rem; /* Reducido de 2.5rem */
     font-weight: 800;
     font-variant-numeric: tabular-nums;
 }
@@ -296,4 +344,8 @@ button:active {
 .result-base {
     border-color: #3b82f6 !important;
     color: #3b82f6 !important;
+}
+
+.hidden {
+    display: none !important;
 }
