@@ -199,28 +199,91 @@ document.addEventListener('DOMContentLoaded', () => {
     // Lógica para desactivar Molaridad si es Agua
     const molarity1Input = document.getElementById('molarity1');
     const molarity2Input = document.getElementById('molarity2');
+    const volume1Input = document.getElementById('volume1'); // Nuevo selector
+    const volume2Input = document.getElementById('volume2'); // Nuevo selector
+    
+    // Selectores para el bloqueo visual
+    // select2 ya está declarado arriba
+    const card2 = select2.closest('.card'); // Seleccionamos la tarjeta entera
+    
     const waterString = NEUTRALS[0]; // "H₂O (no molarity)"
 
     function toggleMolarity(select, input) {
         if (select.value === waterString) {
             input.disabled = true;
-            input.value = ""; // Limpiar visualmente
+            input.value = ""; 
             input.placeholder = "---";
         } else {
-            input.disabled = false;
-            input.placeholder = "Ej: 0.1";
+            // Solo reactivamos si la tarjeta NO está bloqueada globalmente
+            if (!input.classList.contains('global-disabled')) {
+                input.disabled = false;
+                input.placeholder = "Ej: 0.1";
+            }
         }
     }
 
-    select1.addEventListener('change', () => toggleMolarity(select1, molarity1Input));
+    // Función para comprobar si la Disolución 1 es válida y activar la 2
+    function checkSolution1Validity() {
+        const f1 = select1.value;
+        const m1 = parseFloat(molarity1Input.value);
+        const v1 = parseFloat(volume1Input.value);
+        
+        let isValid = false;
+
+        if (f1 === waterString) {
+            // Si es agua, solo necesitamos volumen
+            isValid = !isNaN(v1) && v1 > 0;
+        } else {
+            // Si es otro, necesitamos molaridad y volumen
+            isValid = !isNaN(m1) && m1 > 0 && !isNaN(v1) && v1 > 0;
+        }
+
+        // Elementos a bloquear/desbloquear en D2
+        const d2Inputs = [select2, molarity2Input, volume2Input];
+
+        if (isValid) {
+            // ACTIVAR D2
+            card2.style.opacity = "1";
+            card2.style.pointerEvents = "auto";
+            
+            d2Inputs.forEach(el => {
+                el.disabled = false;
+                el.classList.remove('global-disabled');
+            });
+            
+            // Re-aplicar lógica específica de agua para D2 (por si D2 es agua)
+            toggleMolarity(select2, molarity2Input); 
+        } else {
+            // DESACTIVAR D2
+            card2.style.opacity = "0.6"; // Efecto visual "apagado"
+            card2.style.pointerEvents = "none"; // Evita clicks
+            
+            d2Inputs.forEach(el => {
+                el.disabled = true;
+                el.classList.add('global-disabled'); // Marca para no reactivar accidentalmente
+            });
+        }
+    }
+
+    select1.addEventListener('change', () => {
+        toggleMolarity(select1, molarity1Input);
+        checkSolution1Validity();
+    });
+    
+    molarity1Input.addEventListener('input', checkSolution1Validity);
+    volume1Input.addEventListener('input', checkSolution1Validity);
+    
+    // Listeners para toggleMolarity en D2 (cuando esté activa)
     select2.addEventListener('change', () => toggleMolarity(select2, molarity2Input));
 
     // Selección inicial
-    select1.value = ACIDS[0]; // HCl
-    select2.value = NEUTRALS[3]; // No substance
-    // Asegurar estado inicial correcto
+    select1.value = ACIDS[0]; 
+    select2.value = NEUTRALS[3]; 
+    
+    // Inicializar estados
     toggleMolarity(select1, molarity1Input);
     toggleMolarity(select2, molarity2Input);
+    checkSolution1Validity(); // Comprobar estado inicial (bloqueará D2)
 
     // 2. Manejar el click del botón
     const btn = document.getElementById('calculate-btn');
