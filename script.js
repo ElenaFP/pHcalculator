@@ -1,12 +1,14 @@
 // Constantes de sustancias
 const ACIDS = ["HCl", "HBr", "HI", "HNO\u2083", "HClO\u2083", "HClO\u2084"];
 const BASES = ["LiOH", "NaOH", "KOH", "RbOH", "CsOH"];
-const NEUTRALS = ["H\u2082O (no molarity)", "NaCl", "KCl", "No substance"];
+// ACTUALIZADO: Traducción al español y eliminación de "no molarity"
+const NEUTRALS = ["H\u2082O", "NaCl", "KCl", "Ninguna"];
 
 // Clase Substance
 class Substance {
     constructor(formula, molarity, volume) {
-        if (molarity < 0 || volume < 0) {
+        // Permitimos 0 si es "Ninguna" para facilitar la lógica interna
+        if ((molarity < 0 || volume < 0) && formula !== "Ninguna") {
             throw new Error("Molarity and volume must have positive values.");
         }
         this._formula = formula;
@@ -103,8 +105,6 @@ function getColorClass(pH) {
 
 // --- Lógica de UI ---
 
-// Mapeo de iones para formular sales
-// Clave: Fórmula completa (con unicode), Valor: Parte iónica (string simple para formatear después)
 const ANIONS = {
     "HCl": "Cl",
     "HBr": "Br",
@@ -123,8 +123,6 @@ const CATIONS = {
 };
 
 function formatFormulaHTML(formula) {
-    // Convierte números en la fórmula a etiquetas <sub>
-    // También maneja los unicodes si vienen
     return formula.replace(/(\d+)/g, "<sub>$1</sub>")
                   .replace(/\u2082/g, "<sub>2</sub>")
                   .replace(/\u2083/g, "<sub>3</sub>")
@@ -155,8 +153,9 @@ function getReactionHTML(substance1, substance2) {
     }
 
     // Caso 2: Determinar si es una mezcla o sustancia única
-    const s1Present = substance1._formula !== "No substance" && substance1.get_volume() > 0;
-    const s2Present = substance2._formula !== "No substance" && substance2.get_volume() > 0;
+    // ACTUALIZADO: Usamos "Ninguna" para chequear existencia
+    const s1Present = substance1._formula !== "Ninguna" && substance1.get_volume() > 0;
+    const s2Present = substance2._formula !== "Ninguna" && substance2.get_volume() > 0;
 
     if (s1Present && s2Present) {
         return `<span class="no-reaction">Mezcla sin reacción química</span>`;
@@ -196,29 +195,49 @@ document.addEventListener('DOMContentLoaded', () => {
     populateSelect(select1);
     populateSelect(select2);
 
-    // Lógica para desactivar Molaridad si es Agua
+    // Lógica de Inputs
     const molarity1Input = document.getElementById('molarity1');
     const molarity2Input = document.getElementById('molarity2');
-    const volume1Input = document.getElementById('volume1'); // Nuevo selector
-    const volume2Input = document.getElementById('volume2'); // Nuevo selector
+    const volume1Input = document.getElementById('volume1');
+    const volume2Input = document.getElementById('volume2');
     
     // Selectores para el bloqueo visual
-    // select2 ya está declarado arriba
-    const card2 = select2.closest('.card'); // Seleccionamos la tarjeta entera
+    const card2 = select2.closest('.card');
     
-    const waterString = NEUTRALS[0]; // "H₂O (no molarity)"
+    const waterString = NEUTRALS[0]; // "H₂O"
+    const noneString = NEUTRALS[3];  // "Ninguna"
 
-    function toggleMolarity(select, input) {
-        if (select.value === waterString) {
-            input.disabled = true;
-            input.value = ""; 
-            input.placeholder = "---";
+    // Función unificada para gestionar estado de inputs según la fórmula
+    function updateInputState(select, molInput, volInput) {
+        const val = select.value;
+        const isGlobalDisabled = molInput.classList.contains('global-disabled');
+
+        if (isGlobalDisabled) return; // Si la tarjeta está bloqueada, no hacemos nada
+
+        if (val === noneString) {
+            // Caso: Ninguna -> Todo bloqueado y limpio
+            molInput.disabled = true;
+            molInput.value = "";
+            molInput.placeholder = "---";
+            
+            volInput.disabled = true;
+            volInput.value = "";
+            volInput.placeholder = "---";
+        } else if (val === waterString) {
+            // Caso: Agua -> Mol bloqueada, Vol activo
+            molInput.disabled = true;
+            molInput.value = "";
+            molInput.placeholder = "---";
+            
+            volInput.disabled = false;
+            volInput.placeholder = "Ej: 50";
         } else {
-            // Solo reactivamos si la tarjeta NO está bloqueada globalmente
-            if (!input.classList.contains('global-disabled')) {
-                input.disabled = false;
-                input.placeholder = "Ej: 0.1";
-            }
+            // Caso: Normal -> Todo activo
+            molInput.disabled = false;
+            molInput.placeholder = "Ej: 0.1";
+            
+            volInput.disabled = false;
+            volInput.placeholder = "Ej: 50";
         }
     }
 
@@ -230,11 +249,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         let isValid = false;
 
-        if (f1 === waterString) {
-            // Si es agua, solo necesitamos volumen
+        if (f1 === noneString) {
+            isValid = false; // Disolución 1 no puede ser "Ninguna"
+        } else if (f1 === waterString) {
             isValid = !isNaN(v1) && v1 > 0;
         } else {
-            // Si es otro, necesitamos molaridad y volumen
             isValid = !isNaN(m1) && m1 > 0 && !isNaN(v1) && v1 > 0;
         }
 
@@ -251,39 +270,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.classList.remove('global-disabled');
             });
             
-            // Re-aplicar lógica específica de agua para D2 (por si D2 es agua)
-            toggleMolarity(select2, molarity2Input); 
+            // Re-aplicar lógica específica de fórmula para D2
+            updateInputState(select2, molarity2Input, volume2Input); 
         } else {
             // DESACTIVAR D2
-            card2.style.opacity = "0.6"; // Efecto visual "apagado"
-            card2.style.pointerEvents = "none"; // Evita clicks
+            card2.style.opacity = "0.6";
+            card2.style.pointerEvents = "none";
             
             d2Inputs.forEach(el => {
                 el.disabled = true;
-                el.classList.add('global-disabled'); // Marca para no reactivar accidentalmente
+                el.classList.add('global-disabled');
             });
         }
     }
 
     select1.addEventListener('change', () => {
-        toggleMolarity(select1, molarity1Input);
+        updateInputState(select1, molarity1Input, volume1Input);
         checkSolution1Validity();
     });
     
     molarity1Input.addEventListener('input', checkSolution1Validity);
     volume1Input.addEventListener('input', checkSolution1Validity);
     
-    // Listeners para toggleMolarity en D2 (cuando esté activa)
-    select2.addEventListener('change', () => toggleMolarity(select2, molarity2Input));
+    // Listeners para D2
+    select2.addEventListener('change', () => updateInputState(select2, molarity2Input, volume2Input));
 
     // Selección inicial
     select1.value = ACIDS[0]; 
-    select2.value = NEUTRALS[3]; 
+    select2.value = noneString; // Por defecto Ninguna en la 2
     
     // Inicializar estados
-    toggleMolarity(select1, molarity1Input);
-    toggleMolarity(select2, molarity2Input);
-    checkSolution1Validity(); // Comprobar estado inicial (bloqueará D2)
+    updateInputState(select1, molarity1Input, volume1Input);
+    // D2 empieza bloqueada por defecto, pero configuramos su estado lógico
+    updateInputState(select2, molarity2Input, volume2Input);
+    checkSolution1Validity(); 
 
     // 2. Manejar el click del botón
     const btn = document.getElementById('calculate-btn');
@@ -298,24 +318,27 @@ document.addEventListener('DOMContentLoaded', () => {
         errorMsg.classList.add('invisible'); 
         errorMsg.textContent = "";
         resultBox.className = ""; 
-        reactionContainer.classList.add('hidden'); // Ocultar reacción previa
+        reactionContainer.classList.add('hidden'); 
 
         // Obtener valores
         const f1 = select1.value;
-        // Si es agua, forzamos molaridad 0 para evitar errores de NaN
-        const m1 = (f1 === waterString) ? 0 : parseFloat(molarity1Input.value);
-        const v1 = parseFloat(document.getElementById('volume1').value);
+        const m1 = (f1 === waterString || f1 === noneString) ? 0 : parseFloat(molarity1Input.value);
+        const v1 = (f1 === noneString) ? 0 : parseFloat(document.getElementById('volume1').value);
 
         const f2 = select2.value;
-        // Si es agua o vacío, molaridad 0
-        const m2 = (f2 === waterString || !molarity2Input.value) ? 0 : parseFloat(molarity2Input.value);
-        const v2 = document.getElementById('volume2').value ? parseFloat(document.getElementById('volume2').value) : 0;
+        const m2 = (f2 === waterString || f2 === noneString || !molarity2Input.value) ? 0 : parseFloat(molarity2Input.value);
+        const v2 = (f2 === noneString || !document.getElementById('volume2').value) ? 0 : parseFloat(document.getElementById('volume2').value);
 
         // Validación básica
-        // Solo validamos m1 si NO es agua. v1 siempre se valida.
-        if ((f1 !== waterString && isNaN(m1)) || isNaN(v1)) {
-            alert("Por favor, introduce valores numéricos válidos para la Sustancia 1.");
-            return;
+        // Validamos D1 solo si no es Ninguna (que no debería serlo por checkSolution1Validity)
+        // Y si no es Agua (que no tiene molaridad)
+        if (f1 !== noneString && f1 !== waterString && isNaN(m1)) {
+             alert("Por favor, introduce una molaridad válida para la Disolución 1.");
+             return;
+        }
+        if (f1 !== noneString && isNaN(v1)) {
+             alert("Por favor, introduce un volumen válido para la Disolución 1.");
+             return;
         }
 
         try {
@@ -344,8 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Color
             const colorClass = getColorClass(pH);
             resultBox.classList.add(colorClass);
-
-            // Ya no hace falta mostrar result-section porque siempre es visible
 
         } catch (e) {
             alert("Error: " + e.message);
