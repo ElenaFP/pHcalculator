@@ -100,9 +100,9 @@ function getPH(protons, hydroxils) {
 
 function validatePH(pH) {
     if (pH > 14) {
-        return `Concentración de base inusualmente alta. pH calculado: ${pH.toFixed(2)}`;
+        return `Concentración de base inusualmente alta.`;
     } else if (pH < 0) {
-        return `Concentración de ácido inusualmente alta. pH calculado: ${pH.toFixed(2)}`;
+        return `Concentración de ácido inusualmente alta.`;
     }
     return null; // OK
 }

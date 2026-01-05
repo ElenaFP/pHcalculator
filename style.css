@@ -157,7 +157,6 @@ button:active {
 
 #result-box .label {
     font-size: 0.875rem;
-    text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 0.5rem;
     color: var(--text-muted);
@@ -187,13 +186,13 @@ button:active {
 
 .error {
     color: #ef4444;
-    margin-top: 1rem;
+    margin: 0 auto 1.5rem auto;
     font-weight: 600;
     background: #fef2f2;
     padding: 1rem;
     border-radius: 8px;
     border: 1px solid #fecaca;
-    display: inline-block;
+    display: table;
 }
 
 .hidden {
