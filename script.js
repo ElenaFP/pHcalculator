@@ -1,13 +1,11 @@
 // Constantes de sustancias
 const ACIDS = ["HCl", "HBr", "HI", "HNO\u2083", "HClO\u2083", "HClO\u2084"];
 const BASES = ["LiOH", "NaOH", "KOH", "RbOH", "CsOH"];
-// ACTUALIZADO: Traducción al español y eliminación de "no molarity"
 const NEUTRALS = ["H\u2082O", "NaCl", "KCl", "Ninguna"];
 
 // Clase Substance
 class Substance {
     constructor(formula, molarity, volume) {
-        // Permitimos 0 si es "Ninguna" para facilitar la lógica interna
         if ((molarity < 0 || volume < 0) && formula !== "Ninguna") {
             throw new Error("Molarity and volume must have positive values.");
         }
@@ -21,27 +19,16 @@ class Substance {
         if (ACIDS.includes(this._formula)) return "acid";
         if (BASES.includes(this._formula)) return "base";
         if (NEUTRALS.includes(this._formula)) return "neutral";
-        return "neutral"; // Fallback
+        return "neutral"; 
     }
 
-    get_molarity() {
-        return this._molarity;
-    }
-
-    get_volume() {
-        return this._volume;
-    }
-
-    is_acid() {
-        return this._acidity === "acid";
-    }
-
-    is_base() {
-        return this._acidity === "base";
-    }
+    get_molarity() { return this._molarity; }
+    get_volume() { return this._volume; }
+    is_acid() { return this._acidity === "acid"; }
+    is_base() { return this._acidity === "base"; }
 }
 
-// Lógica de cálculo (Funciones puras)
+// Lógica de cálculo
 function getTotalVolume(substance1, substance2) {
     return substance1.get_volume() + substance2.get_volume();
 }
@@ -86,13 +73,30 @@ function getPH(protons, hydroxils) {
     return pH;
 }
 
-function validatePH(pH) {
+// Nueva función unificada de mensajes (Error + Info)
+function getStatusMessage(pH, substance1, substance2) {
+    // 1. Errores de rango (Rojo)
     if (pH > 14) {
-        return `Concentración de base inusualmente alta.`;
-    } else if (pH < 0) {
-        return `Concentración de ácido inusualmente alta.`;
+        return { text: "Concentración de base inusualmente alta.", type: "error" };
+    } 
+    if (pH < 0) {
+        return { text: "Concentración de ácido inusualmente alta.", type: "error" };
     }
-    return null; // OK
+    
+    // 2. Información normal (Gris/Suave)
+    if (Math.abs(pH - 7.0) < 0.01) {
+        return { text: "Disolución neutra", type: "info" };
+    }
+
+    // Detectar si hubo reacción de neutralización
+    // (Uno es ácido y el otro base)
+    const isNeutralization = (substance1.is_acid() && substance2.is_base()) || 
+                             (substance1.is_base() && substance2.is_acid());
+
+    if (pH < 7) {
+        return { text: isNeutralization ? "Exceso de ácido" : "Disolución ácida", type: "info" };
+    }
+    return { text: isNeutralization ? "Exceso de base" : "Disolución básica", type: "info" };
 }
 
 function getColorClass(pH) {
@@ -102,24 +106,15 @@ function getColorClass(pH) {
     return "result-neutral";
 }
 
-
 // --- Lógica de UI ---
 
 const ANIONS = {
-    "HCl": "Cl",
-    "HBr": "Br",
-    "HI": "I",
-    "HNO\u2083": "NO3",
-    "HClO\u2083": "ClO3",
-    "HClO\u2084": "ClO4"
+    "HCl": "Cl", "HBr": "Br", "HI": "I",
+    "HNO\u2083": "NO3", "HClO\u2083": "ClO3", "HClO\u2084": "ClO4"
 };
 
 const CATIONS = {
-    "LiOH": "Li",
-    "NaOH": "Na",
-    "KOH": "K",
-    "RbOH": "Rb",
-    "CsOH": "Cs"
+    "LiOH": "Li", "NaOH": "Na", "KOH": "K", "RbOH": "Rb", "CsOH": "Cs"
 };
 
 function formatFormulaHTML(formula) {
@@ -135,11 +130,9 @@ function getReactionHTML(substance1, substance2) {
 
     if (substance1.is_acid()) acid = substance1;
     if (substance2.is_acid()) acid = substance2;
-    
     if (substance1.is_base()) base = substance1;
     if (substance2.is_base()) base = substance2;
 
-    // Caso 1: Neutralización (Ácido + Base)
     if (acid && base) {
         const anion = ANIONS[acid._formula];
         const cation = CATIONS[base._formula];
@@ -152,8 +145,6 @@ function getReactionHTML(substance1, substance2) {
         }
     }
 
-    // Caso 2: Determinar si es una mezcla o sustancia única
-    // ACTUALIZADO: Usamos "Ninguna" para chequear existencia
     const s1Present = substance1._formula !== "Ninguna" && substance1.get_volume() > 0;
     const s2Present = substance2._formula !== "Ninguna" && substance2.get_volume() > 0;
 
@@ -165,7 +156,7 @@ function getReactionHTML(substance1, substance2) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Rellenar los dropdowns
+    // 1. Rellenar dropdowns
     const allOptions = [
         { label: "--- Ácidos Fuertes ---", disabled: true },
         ...ACIDS.map(f => ({ value: f, label: f })),
@@ -195,53 +186,34 @@ document.addEventListener('DOMContentLoaded', () => {
     populateSelect(select1);
     populateSelect(select2);
 
-    // Lógica de Inputs
+    // Inputs
     const molarity1Input = document.getElementById('molarity1');
     const molarity2Input = document.getElementById('molarity2');
     const volume1Input = document.getElementById('volume1');
     const volume2Input = document.getElementById('volume2');
-    
-    // Selectores para el bloqueo visual
     const card2 = select2.closest('.card');
     
-    const waterString = NEUTRALS[0]; // "H₂O"
-    const noneString = NEUTRALS[3];  // "Ninguna"
+    const waterString = NEUTRALS[0];
+    const noneString = NEUTRALS[3];
 
-    // Función unificada para gestionar estado de inputs según la fórmula
     function updateInputState(select, molInput, volInput) {
         const val = select.value;
         const isGlobalDisabled = molInput.classList.contains('global-disabled');
 
-        if (isGlobalDisabled) return; // Si la tarjeta está bloqueada, no hacemos nada
+        if (isGlobalDisabled) return;
 
         if (val === noneString) {
-            // Caso: Ninguna -> Todo bloqueado y limpio
-            molInput.disabled = true;
-            molInput.value = "";
-            molInput.placeholder = "---";
-            
-            volInput.disabled = true;
-            volInput.value = "";
-            volInput.placeholder = "---";
+            molInput.disabled = true; molInput.value = ""; molInput.placeholder = "---";
+            volInput.disabled = true; volInput.value = ""; volInput.placeholder = "---";
         } else if (val === waterString) {
-            // Caso: Agua -> Mol bloqueada, Vol activo
-            molInput.disabled = true;
-            molInput.value = "";
-            molInput.placeholder = "---";
-            
-            volInput.disabled = false;
-            volInput.placeholder = "Ej: 50";
+            molInput.disabled = true; molInput.value = ""; molInput.placeholder = "---";
+            volInput.disabled = false; volInput.placeholder = "Ej: 50";
         } else {
-            // Caso: Normal -> Todo activo
-            molInput.disabled = false;
-            molInput.placeholder = "Ej: 0.1";
-            
-            volInput.disabled = false;
-            volInput.placeholder = "Ej: 50";
+            molInput.disabled = false; molInput.placeholder = "Ej: 0.1";
+            volInput.disabled = false; volInput.placeholder = "Ej: 50";
         }
     }
 
-    // Función para comprobar si la Disolución 1 es válida y activar la 2
     function checkSolution1Validity() {
         const f1 = select1.value;
         const m1 = parseFloat(molarity1Input.value);
@@ -250,33 +222,26 @@ document.addEventListener('DOMContentLoaded', () => {
         let isValid = false;
 
         if (f1 === noneString) {
-            isValid = false; // Disolución 1 no puede ser "Ninguna"
+            isValid = false;
         } else if (f1 === waterString) {
             isValid = !isNaN(v1) && v1 > 0;
         } else {
             isValid = !isNaN(m1) && m1 > 0 && !isNaN(v1) && v1 > 0;
         }
 
-        // Elementos a bloquear/desbloquear en D2
         const d2Inputs = [select2, molarity2Input, volume2Input];
 
         if (isValid) {
-            // ACTIVAR D2
             card2.style.opacity = "1";
             card2.style.pointerEvents = "auto";
-            
             d2Inputs.forEach(el => {
                 el.disabled = false;
                 el.classList.remove('global-disabled');
             });
-            
-            // Re-aplicar lógica específica de fórmula para D2
             updateInputState(select2, molarity2Input, volume2Input); 
         } else {
-            // DESACTIVAR D2
             card2.style.opacity = "0.6";
             card2.style.pointerEvents = "none";
-            
             d2Inputs.forEach(el => {
                 el.disabled = true;
                 el.classList.add('global-disabled');
@@ -291,21 +256,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     molarity1Input.addEventListener('input', checkSolution1Validity);
     volume1Input.addEventListener('input', checkSolution1Validity);
-    
-    // Listeners para D2
     select2.addEventListener('change', () => updateInputState(select2, molarity2Input, volume2Input));
 
-    // Selección inicial
+    // Inicialización
     select1.value = ACIDS[0]; 
-    select2.value = noneString; // Por defecto Ninguna en la 2
+    select2.value = noneString; 
     
-    // Inicializar estados
     updateInputState(select1, molarity1Input, volume1Input);
-    // D2 empieza bloqueada por defecto, pero configuramos su estado lógico
     updateInputState(select2, molarity2Input, volume2Input);
     checkSolution1Validity(); 
 
-    // 2. Manejar el click del botón
+    // Botón Calcular
     const btn = document.getElementById('calculate-btn');
     const resultBox = document.getElementById('result-box');
     const phValueSpan = document.getElementById('ph-value');
@@ -314,24 +275,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const reactionEquation = document.getElementById('reaction-equation');
 
     btn.addEventListener('click', () => {
-        // Reset visual
-        errorMsg.classList.add('invisible'); 
+        errorMsg.className = 'invisible'; // Reset
         errorMsg.textContent = "";
         resultBox.className = ""; 
         reactionContainer.classList.add('hidden'); 
 
-        // Obtener valores
         const f1 = select1.value;
         const m1 = (f1 === waterString || f1 === noneString) ? 0 : parseFloat(molarity1Input.value);
-        const v1 = (f1 === noneString) ? 0 : parseFloat(document.getElementById('volume1').value);
+        const v1 = (f1 === noneString) ? 0 : parseFloat(volume1Input.value);
 
         const f2 = select2.value;
         const m2 = (f2 === waterString || f2 === noneString || !molarity2Input.value) ? 0 : parseFloat(molarity2Input.value);
-        const v2 = (f2 === noneString || !document.getElementById('volume2').value) ? 0 : parseFloat(document.getElementById('volume2').value);
+        const v2 = (f2 === noneString || !volume2Input.value) ? 0 : parseFloat(volume2Input.value);
 
-        // Validación básica
-        // Validamos D1 solo si no es Ninguna (que no debería serlo por checkSolution1Validity)
-        // Y si no es Agua (que no tiene molaridad)
         if (f1 !== noneString && f1 !== waterString && isNaN(m1)) {
              alert("Por favor, introduce una molaridad válida para la Disolución 1.");
              return;
@@ -350,23 +306,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const hydroxils = getHydroxilsConcentration(s1, s2, totalVol);
             const pH = getPH(protons, hydroxils);
 
-            // Validaciones de rango
-            const rangeWarning = validatePH(pH);
-            if (rangeWarning) {
-                errorMsg.textContent = rangeWarning;
-                errorMsg.classList.remove('invisible'); 
-            }
+            // GESTIÓN UNIFICADA DE MENSAJES
+            const status = getStatusMessage(pH, s1, s2);
+            errorMsg.textContent = status.text;
+            errorMsg.className = status.type; // 'error' o 'info'
 
-            // Mostrar Ecuación Química
+            // Reacción
             reactionEquation.innerHTML = getReactionHTML(s1, s2);
             reactionContainer.classList.remove('hidden');
 
-            // Mostrar resultado
             phValueSpan.textContent = pH.toFixed(2);
-            
-            // Color
-            const colorClass = getColorClass(pH);
-            resultBox.classList.add(colorClass);
+            resultBox.classList.add(getColorClass(pH));
 
         } catch (e) {
             alert("Error: " + e.message);
