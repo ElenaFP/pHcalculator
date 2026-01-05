@@ -134,8 +134,31 @@ document.addEventListener('DOMContentLoaded', () => {
     populateSelect(select1);
     populateSelect(select2);
 
+    // Lógica para desactivar Molaridad si es Agua
+    const molarity1Input = document.getElementById('molarity1');
+    const molarity2Input = document.getElementById('molarity2');
+    const waterString = NEUTRALS[0]; // "H₂O (no molarity)"
+
+    function toggleMolarity(select, input) {
+        if (select.value === waterString) {
+            input.disabled = true;
+            input.value = ""; // Limpiar visualmente
+            input.placeholder = "---";
+        } else {
+            input.disabled = false;
+            input.placeholder = "Ej: 0.1";
+        }
+    }
+
+    select1.addEventListener('change', () => toggleMolarity(select1, molarity1Input));
+    select2.addEventListener('change', () => toggleMolarity(select2, molarity2Input));
+
+    // Selección inicial
     select1.value = ACIDS[0]; // HCl
     select2.value = NEUTRALS[3]; // No substance
+    // Asegurar estado inicial correcto
+    toggleMolarity(select1, molarity1Input);
+    toggleMolarity(select2, molarity2Input);
 
     // 2. Manejar el click del botón
     const btn = document.getElementById('calculate-btn');
@@ -145,21 +168,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btn.addEventListener('click', () => {
         // Reset visual
-        errorMsg.classList.add('invisible'); // Usamos invisible, no hidden
+        errorMsg.classList.add('invisible'); 
         errorMsg.textContent = "";
-        resultBox.className = ""; // Quitar colores
+        resultBox.className = ""; 
 
         // Obtener valores
         const f1 = select1.value;
-        const m1 = parseFloat(document.getElementById('molarity1').value);
+        // Si es agua, forzamos molaridad 0 para evitar errores de NaN
+        const m1 = (f1 === waterString) ? 0 : parseFloat(molarity1Input.value);
         const v1 = parseFloat(document.getElementById('volume1').value);
 
         const f2 = select2.value;
-        const m2 = document.getElementById('molarity2').value ? parseFloat(document.getElementById('molarity2').value) : 0;
+        // Si es agua o vacío, molaridad 0
+        const m2 = (f2 === waterString || !molarity2Input.value) ? 0 : parseFloat(molarity2Input.value);
         const v2 = document.getElementById('volume2').value ? parseFloat(document.getElementById('volume2').value) : 0;
 
         // Validación básica
-        if (isNaN(m1) || isNaN(v1)) {
+        // Solo validamos m1 si NO es agua. v1 siempre se valida.
+        if ((f1 !== waterString && isNaN(m1)) || isNaN(v1)) {
             alert("Por favor, introduce valores numéricos válidos para la Sustancia 1.");
             return;
         }
