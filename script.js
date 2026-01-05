@@ -106,19 +106,25 @@ function formatFormulaHTML(formula) {
 }
 
 function getReactionHTML(substance1, substance2) {
-    let acid = null; let base = null;
-    if (substance1.is_acid()) acid = substance1;
+    let acid = null;
+    let base = null;
+
+    if (substance1.is_acid() && substance1.get_volume() > 0) acid = substance1;
     if (substance2.is_acid()) acid = substance2;
-    if (substance1.is_base()) base = substance1;
-    if (substance2.is_base()) base = substance2;
+    // CORREGIDO: También chequeamos vol > 0 para ácidos (aunque ya lo hice arriba)
+    
+    if (substance1.is_base() && substance1.get_volume() > 0) base = substance1;
+    if (substance2.is_base() && substance2.get_volume() > 0) base = substance2;
 
     if (acid && base) {
         const anion = ANIONS[acid._formula];
         const cation = CATIONS[base._formula];
         if (anion && cation) {
-            return `${formatFormulaHTML(acid._formula)} + ${formatFormulaHTML(base._formula)} <span class="arrow">&rarr;</span> ${formatFormulaHTML(cation + anion)} + H<sub>2</sub>O`;
+            const salt = cation + anion;
+            return `${formatFormulaHTML(acid._formula)} + ${formatFormulaHTML(base._formula)} <span class="arrow">&rarr;</span> ${formatFormulaHTML(salt)} + H<sub>2</sub>O`;
         }
     }
+    
     const s1Present = substance1._formula !== "Ninguna" && substance1.get_volume() > 0;
     const s2Present = substance2._formula !== "Ninguna" && substance2.get_volume() > 0;
     return (s1Present && s2Present) ? `<span class="no-reaction">Mezcla sin reacción química</span>` : `<span class="no-reaction">Sin reacción química</span>`;
@@ -155,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const volume1Input = document.getElementById('volume1');
     const volume2Input = document.getElementById('volume2');
     const card2 = select2.closest('.card');
-    const btn = document.getElementById('calculate-btn'); // Subido aquí
+    const btn = document.getElementById('calculate-btn');
     
     const waterString = NEUTRALS[0];
     const noneString = NEUTRALS[3];
@@ -197,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
             d2Inputs.forEach(el => { el.disabled = true; el.classList.add('global-disabled'); });
         }
 
-        // BLOQUEO DEL BOTÓN CALCULAR (Nuevo)
+        // BLOQUEO DEL BOTÓN CALCULAR
         btn.disabled = !isValid;
     }
 
@@ -234,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const s2 = new Substance(f2, m2, v2);
             const totalVol = getTotalVolume(s1, s2);
             const protons = getProtonsConcentration(s1, s2, totalVol);
-            const hydroxils = getHydroxilsConcentration(s1, s2, totalVol); // FIX: totalVolume -> totalVol
+            const hydroxils = getHydroxilsConcentration(s1, s2, totalVol); 
             const pH = getPH(protons, hydroxils);
 
             const status = getStatusMessage(pH, s1, s2);
