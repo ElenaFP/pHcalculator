@@ -25,8 +25,8 @@ Una calculadora web interactiva y didáctica para determinar el pH de disolucion
 
 1.  **Configura la Disolución 1:** Selecciona la sustancia e introduce la molaridad (mol/L) y el volumen (mL).
 2.  **Configura la Disolución 2 (Opcional):** Una vez válida la primera, se activará la segunda.
-3.  **Calcula:** Pulsa el botón "Calcular pH".
-4.  **Analiza:** Revisa la ecuación química, el valor del pH y los mensajes informativos sobre el estado final de la disolución.
+3.  **Calcula:** El botón "Calcular pH" se activará automáticamente cuando los datos de la Disolución 1 sean coherentes. Pulsa para obtener el resultado.
+4.  **Analiza:** Revisa la ecuación química y el valor del pH. La aplicación avisará si las concentraciones son inusualmente altas.
 
 ---
 *Versión Web mejorada y ampliada basada en el proyecto original en Python "pH Mix Master".*

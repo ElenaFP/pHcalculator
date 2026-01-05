@@ -196,6 +196,14 @@ button:hover {
     background-color: var(--primary-hover);
 }
 
+button:disabled {
+    background-color: var(--text-muted);
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none;
+}
+
 button:active {
     transform: translateY(1px);
 }
