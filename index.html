@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pH Mix Master</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Fuente académica/limpia (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <main class="container">
+        <header>
+            <h1>pH Mix Master</h1>
+            <p>Calculadora de mezclas de ácidos y bases fuertes</p>
+        </header>
+
+        <form id="ph-form">
+            <div class="substances-grid">
+                <!-- Sustancia 1 -->
+                <div class="card">
+                    <h2>Sustancia 1</h2>
+                    
+                    <div class="form-group">
+                        <label for="formula1">Fórmula</label>
+                        <select id="formula1" required>
+                            <!-- Se llena desde JS -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="molarity1">Molaridad (mol/L)</label>
+                        <input type="number" id="molarity1" step="any" min="0" placeholder="Ej: 0.1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="volume1">Volumen (mL)</label>
+                        <input type="number" id="volume1" step="any" min="0" placeholder="Ej: 50">
+                    </div>
+                </div>
+
+                <!-- Sustancia 2 -->
+                <div class="card">
+                    <h2>Sustancia 2</h2>
+                    
+                    <div class="form-group">
+                        <label for="formula2">Fórmula</label>
+                        <select id="formula2" required>
+                            <!-- Se llena desde JS -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="molarity2">Molaridad (mol/L)</label>
+                        <input type="number" id="molarity2" step="any" min="0" placeholder="Ej: 0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="volume2">Volumen (mL)</label>
+                        <input type="number" id="volume2" step="any" min="0" placeholder="Ej: 0">
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="button" id="calculate-btn">Calcular pH</button>
+            </div>
+        </form>
+
+        <div id="result-section" class="hidden">
+            <div id="result-box">
+                <span class="label">pH Resultante</span>
+                <span id="ph-value">--</span>
+            </div>
+            <p id="error-message" class="error hidden"></p>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
