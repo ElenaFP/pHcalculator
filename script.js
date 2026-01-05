@@ -1,7 +1,7 @@
 // Constantes de sustancias
-const ACIDS = ["HCl", "HBr", "HI", "HNO3", "HClO3", "HClO4"];
+const ACIDS = ["HCl", "HBr", "HI", "HNO\u2083", "HClO\u2083", "HClO\u2084"];
 const BASES = ["LiOH", "NaOH", "KOH", "RbOH", "CsOH"];
-const NEUTRALS = ["H2O (no molarity)", "NaCl", "KCl", "No substance"];
+const NEUTRALS = ["H\u2082O (no molarity)", "NaCl", "KCl", "No substance"];
 
 // Clase Substance
 class Substance {
